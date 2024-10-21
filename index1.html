@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload or Textarea Input</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            display: flex;
+            width: 80%;
+            justify-content: space-between;
+        }
+        .file-upload {
+            width: 30%; /* Left-hand side width */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f4f4f4;
+        }
+        .output-display {
+            width: 70%; /* Right-hand side width */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fffbe0;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            font-size: 18px;
+            color: green;
+        }
+        .btn-group {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+        .btn.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #progress-container {
+            margin-top: 10px;
+            display: none;
+        }
+        #progress-bar {
+            width: 0;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+        }
+        #progress-wrapper {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            height: 20px;
+        }
+    </style>
+    <script>
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+        }
+
+        function selectButton(button) {
+            document.getElementById('selectedButton').value = button;
+            var buttons = document.querySelectorAll('.btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-' + button).classList.add('selected');
+        }
+
+        function uploadFile(event) {
+            event.preventDefault();  // Prevent the default form submission
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            // Prepare the AJAX request
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", form.action, true);
+
+            // Show the progress bar container
+            document.getElementById('progress-container').style.display = 'block';
+
+            // Track progress
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progress-bar').style.width = percentComplete + '%';
+                }
+            };
+
+            // Hide the progress bar when done
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById('progress-bar').style.width = '0%';
+                    alert("File uploaded successfully");
+                    location.reload();  // Reload to display the output
+                }
+            };
+
+            // Send the form data
+            xhr.send(formData);
+        }
+
+        // Disable file upload if textarea is filled and vice versa
+        function toggleInputs() {
+            const fileInput = document.getElementById('fileInput');
+            const textareaInput = document.getElementById('textareaInput');
+
+            if (textareaInput.value.trim() !== "") {
+                fileInput.disabled = true;
+            } else {
+                fileInput.disabled = false;
+            }
+
+            if (fileInput.files.length > 0) {
+                textareaInput.disabled = true;
+            } else {
+                textareaInput.disabled = false;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="file-upload">
+            <h2>Upload File or Enter Content</h2>
+            <form method="POST" enctype="multipart/form-data" onsubmit="uploadFile(event)">
+                <input type="hidden" name="button" id="selectedButton" value="{{ selected_button }}">
+                <div class="btn-group">
+                    <button type="button" id="btn-A" class="btn {{ 'selected' if selected_button == 'A' else '' }}" onclick="selectButton('A')">A</button>
+                    <button type="button" id="btn-B" class="btn {{ 'selected' if selected_button == 'B' else '' }}" onclick="selectButton('B')">B</button>
+                </div>
+                
+                <!-- File upload input -->
+                <input type="file" name="file" id="fileInput" onchange="toggleInputs()" accept=".txt,.log"><br><br>
+                
+                <!-- Textarea input -->
+                <textarea name="textarea_content" id="textareaInput" oninput="toggleInputs()" placeholder="Or enter file content here"></textarea><br><br>
+                
+                <button type="submit">Submit</button>
+            </form>
+            <div id="loading">
+                <div class="spinner"></div>
+                <span>Processing... Please wait!</span>
+            </div>
+            <div id="progress-container">
+                <div id="progress-wrapper">
+                    <div id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+        <div class="output-display">
+            <h2>Script Output</h2>
+            <textarea readonly>{{ output }}</textarea>
+            {% if output_file_path %}
+                <br>
+                <a href="{{ url_for('download_output') }}">
+                    <button type="button">Download Output</button>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
