@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload or Textarea Input</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            background-color: #28a745; /* Green background for the header */
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .file-upload, .output-display {
+            width: 48%; /* Make both sections take up equal width */
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            margin-right: 5px;
+        }
+
+        #progress-container {
+            display: none; /* Hide progress bar by default */
+            margin-top: 10px;
+        }
+
+        #progress-wrapper {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            height: 10px;
+            width: 100%;
+        }
+
+        #progress-bar {
+            background-color: #28a745;
+            height: 100%;
+            width: 0; /* Progress bar starts empty */
+            border-radius: 5px;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            font-size: 18px;
+            color: #28a745; /* Green color for loading text */
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745; /* Match spinner color with header */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        textarea[readonly] {
+            background-color: #e9ecef; /* Light background for output textarea */
+        }
+
+        .selected {
+            background-color: #28a745; /* Highlight selected button */
+            color: white;
+        }
+    </style>
+    <script>
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+        }
+
+        function selectButton(button) {
+            document.getElementById('selectedButton').value = button;
+            var buttons = document.querySelectorAll('.btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+            document.getElementById('btn-' + button).classList.add('selected');
+        }
+
+        function uploadFile(event, inputType) {
+            event.preventDefault();  // Prevent the default form submission
+
+            const form = document.getElementById(inputType + '-form');
+            const formData = new FormData(form);
+            showLoading();  // Show loading spinner
+
+            // Prepare the AJAX request
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", form.action, true);
+
+            // Show the progress bar container
+            document.getElementById('progress-container').style.display = 'block';
+
+            // Track progress
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progress-bar').style.width = percentComplete + '%';
+                }
+            };
+
+            // Hide the progress bar and loading spinner when done
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById('progress-bar').style.width = '0%';
+                    // Removed the alert here
+                    location.reload();  // Reload to display the output
+                }
+            };
+
+            // Send the form data
+            xhr.send(formData);
+        }
+
+        // Disable file upload if textarea is filled and vice versa
+        function toggleInputs() {
+            const fileInput = document.getElementById('fileInput');
+            const textareaInput = document.getElementById('textareaInput');
+
+            if (textareaInput.value.trim() !== "") {
+                fileInput.disabled = true;
+            } else {
+                fileInput.disabled = false;
+            }
+
+            if (fileInput.files.length > 0) {
+                textareaInput.disabled = true;
+            } else {
+                textareaInput.disabled = false;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>EKDUM</h1>  <!-- Added Heading -->
+    <div class="container">
+        <div class="file-upload">
+            <h2>Upload File or Enter Content</h2>
+            <form id="file-form" method="POST" enctype="multipart/form-data" onsubmit="uploadFile(event, 'file')">
+                <input type="hidden" name="button" id="selectedButton" value="{{ selected_button }}">
+                <div class="btn-group">
+                    <button type="button" id="btn-A" class="btn {{ 'selected' if selected_button == 'A' else '' }}" onclick="selectButton('A')">A</button>
+                    <button type="button" id="btn-B" class="btn {{ 'selected' if selected_button == 'B' else '' }}" onclick="selectButton('B')">B</button>
+                </div>
+                
+                <!-- File upload input -->
+                <input type="file" name="file" id="fileInput" onchange="toggleInputs()" accept=".txt,.log"><br><br>
+                
+                <button type="submit" class="btn btn-primary">Upload File</button>
+            </form>
+            
+            <div id="progress-container">
+                <div id="progress-wrapper">
+                    <div id="progress-bar"></div>
+                </div>
+            </div>
+            
+            <br>
+            
+            <form id="textarea-form" method="POST" enctype="multipart/form-data" onsubmit="uploadFile(event, 'textarea')">
+                <textarea name="textarea_content" id="textareaInput" oninput="toggleInputs()" placeholder="Or enter file content here"></textarea><br><br>
+                
+                <button type="submit" class="btn btn-primary">Submit Text</button>
+            </form>
+            
+            <div id="loading">
+                <div class="spinner"></div>
+                <span>Processing... Please wait!</span>
+            </div>
+        </div>
+        
+        <div class="output-display">
+            <h2>Script Output</h2>
+            <textarea readonly>{{ output }}</textarea>
+            {% if output_file_path %}
+                <br>
+                <a href="{{ url_for('download_output') }}">
+                    <button type="button" class="btn btn-success">Download Output</button>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
