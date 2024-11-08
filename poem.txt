@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<head>
+  <title>Whispers of the Infinite</title>
+</head>
+<body bgcolor="blue" text="#e6e6e6">
+
+  <center>
+    <font color="cyan">
+      <h3>Whispers of the Infinite</h3>
+    </font>
+
+    <font color="#d1d1e9">
+      <p>The world lies quiet, still as dawn,</p>
+      <p>As silver webs of dreams are drawn.</p>
+      <p>Between the stars, the silence grows,</p>
+      <p>Where whispers of the infinite flow.</p>
+
+      <p>A river runs through endless skies,</p>
+      <p>Its waves, the breath of unseen sighs.</p>
+      <p>Through shadows cast by distant light,</p>
+      <p>It winds its way through day and night.</p>
+
+      <p>Each blade of grass, each leaf unfurled,</p>
+      <p>Holds secrets of a larger world.</p>
+      <p>The smallest life, the grandest star,</p>
+      <p>Reflects how small we truly are.</p>
+
+      <p>Yet in our hearts, a fire burns bright,</p>
+      <p>A longing fierce, as deep as night.</p>
+      <p>To find the truth, to seek, to know,</p>
+      <p>Beyond the paths we dare not go.</p>
+
+      <p>The mountains rise with ancient grace,</p>
+      <p>Unyielding as they hold their place.</p>
+      <p>Their peaks, like guardians of time,</p>
+      <p>Stand silent, steadfast, and sublime.</p>
+
+      <p>In forests deep, where shadows fall,</p>
+      <p>Life stirs unseen, both large and small.</p>
+      <p>A thousand eyes watch from the dark,</p>
+      <p>Each with its own eternal spark.</p>
+
+      <p>Oceans churn, with tides they keep,</p>
+      <p>The earth’s vast heart, its breath so deep.</p>
+      <p>From shore to shore, they surge and play,</p>
+      <p>In cycles old as night and day.</p>
+
+      <p>The winds, they roam both free and wild,</p>
+      <p>As restless as a dreamer’s child.</p>
+      <p>They carry songs of distant lands,</p>
+      <p>And trace the earth with unseen hands.</p>
+
+      <p>Through storm and sun, through frost and fire,</p>
+      <p>Nature shapes what we desire.</p>
+      <p>In every grain, each drop, each star,</p>
+      <p>We find out who and what we are.</p>
+
+      <p>So let us walk this earth with care,</p>
+      <p>With wonder for the worlds we share.</p>
+      <p>For in each breath and fleeting hour,</p>
+      <p>Lies beauty, peace, and boundless power.</p>
+    </font>
+  </center>
+
+</body>
+</html>
