@@ -1,35 +1,48 @@
 import requests
 
-# GitHub Personal Access Token (required for authentication)
-GITHUB_TOKEN = "your_github_token"
+def get_commits(owner, repo, token):
+    """
+    Fetches the list of all commits in a GitHub repository.
 
-# GitHub Repository details
-OWNER = "repository_owner"  # e.g., 'octocat'
-REPO = "repository_name"    # e.g., 'Hello-World'
-BRANCH = "main"             # Replace with your branch name
+    :param owner: Repository owner (e.g., 'octocat')
+    :param repo: Repository name (e.g., 'Hello-World')
+    :param token: Personal access token for authentication
+    :return: List of commits
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/commits"
+    headers = {"Authorization": f"Bearer {token}"}
+    commits = []
+    page = 1
 
-# API Endpoint to fetch the branch information
-url = f"https://api.github.com/repos/{OWNER}/{REPO}/commits/{BRANCH}"
+    while True:
+        # Paginate through results
+        response = requests.get(url, headers=headers, params={"page": page, "per_page": 100})
+        if response.status_code != 200:
+            print(f"Failed to fetch commits: {response.status_code} - {response.text}")
+            break
 
-# Headers for the request
-headers = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.v3+json"
-}
+        data = response.json()
+        if not data:  # Stop if no more commits are returned
+            break
 
-try:
-    # Make a GET request to the GitHub API
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()  # Raise an error for bad responses
+        commits.extend(data)
+        page += 1
 
-    # Parse the JSON response
-    data = response.json()
-    commit_id = data.get("sha")  # Get the commit ID (SHA hash)
+    return commits
 
-    if commit_id:
-        print(f"Latest Commit ID for branch '{BRANCH}': {commit_id}")
-    else:
-        print("Unable to fetch commit ID.")
 
-except requests.exceptions.RequestException as e:
-    print(f"Error fetching commit ID: {e}")
+if __name__ == "__main__":
+    # Replace these with your repository details and token
+    GITHUB_OWNER = "octocat"  # Repository owner
+    GITHUB_REPO = "Hello-World"  # Repository name
+    GITHUB_TOKEN = "your_personal_access_token"  # Personal Access Token
+
+    commits = get_commits(GITHUB_OWNER, GITHUB_REPO, GITHUB_TOKEN)
+    
+    print(f"Total commits found: {len(commits)}")
+    for commit in commits:
+        sha = commit.get("sha")
+        message = commit["commit"]["message"]
+        author = commit["commit"]["author"]["name"]
+        date = commit["commit"]["author"]["date"]
+        print(f"{sha}: {message} by {author} on {date}")
