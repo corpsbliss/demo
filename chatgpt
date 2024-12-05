@@ -1,0 +1,217 @@
+To set up a Jenkins server with a master-slave architecture where the slave nodes dynamically scale from a minimum of 2 up to a maximum of 10, follow these detailed steps using AWS EC2, Auto Scaling, and Jenkins configurations.
+
+
+---
+
+Architecture Overview:
+
+Jenkins Master: Central server managing builds and distributing jobs to agents (slaves).
+
+Jenkins Slaves (Agents): Worker nodes executing build jobs, scaling dynamically based on demand.
+
+Auto Scaling Group (ASG): AWS feature to scale the number of slaves automatically.
+
+Load Balancer (Optional): Distribute traffic and ensure high availability.
+
+
+
+---
+
+Step 1: Launch the Jenkins Master Node
+
+1. Create EC2 Instance for Jenkins Master:
+
+Open the AWS Management Console and go to EC2 > Launch Instance.
+
+Choose an Amazon Linux 2 or Ubuntu AMI.
+
+Select an appropriate instance type (e.g., t2.medium).
+
+Configure the security group:
+
+TCP 8080 for Jenkins Web UI.
+
+TCP 50000 for JNLP agents.
+
+TCP 22 for SSH (optional).
+
+
+Create a key pair for SSH access.
+
+
+
+2. Install Jenkins on the Master:
+
+# Update and install Jenkins
+sudo yum update -y
+sudo amazon-linux-extras install java-openjdk11 -y
+wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+sudo yum install jenkins -y
+
+# Start Jenkins service
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+
+
+3. Access Jenkins UI:
+
+Visit http://<JENKINS_MASTER_IP>:8080.
+
+Complete the setup by unlocking Jenkins using the initial admin password:
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Install suggested plugins.
+
+
+
+
+
+---
+
+Step 2: Create a Launch Template for Slaves
+
+1. Create a Launch Template:
+
+Go to EC2 > Launch Templates > Create Launch Template.
+
+Use the same AMI as the master (e.g., Amazon Linux 2).
+
+Add User Data for Jenkins agent setup:
+
+#!/bin/bash
+sudo yum update -y
+sudo amazon-linux-extras install java-openjdk11 -y
+
+# Download Jenkins agent JAR
+wget http://<JENKINS_MASTER_IP>:8080/jnlpJars/agent.jar
+
+# Start Jenkins agent
+java -jar agent.jar \
+  -jnlpUrl http://<JENKINS_MASTER_IP>:8080/computer/$(hostname)/jenkins-agent.jnlp \
+  -secret <SECRET_KEY> \
+  -workDir "/var/jenkins"
+
+
+Replace:
+
+<JENKINS_MASTER_IP> with the Jenkins master IP.
+
+<SECRET_KEY> with the unique secret key provided by Jenkins for agents (create a new node on Jenkins to generate it).
+
+
+
+2. Security Group for Slaves:
+
+Allow outbound traffic on port 50000 to communicate with the master.
+
+Ensure port 22 is open for SSH access if needed.
+
+
+
+
+
+---
+
+Step 3: Create an Auto Scaling Group (ASG)
+
+1. Create Auto Scaling Group:
+
+Go to EC2 > Auto Scaling Groups > Create Auto Scaling Group.
+
+Use the Launch Template created earlier.
+
+Set Minimum Capacity to 2 and Maximum Capacity to 10.
+
+Configure Scaling Policies:
+
+Scale Out Policy: Add an instance if the build queue exceeds a certain number.
+
+Scale In Policy: Remove an instance when idle for a specified period.
+
+
+
+
+2. CloudWatch Metrics for Scaling:
+
+Create a custom CloudWatch alarm to monitor Jenkins' queue size using a script like:
+
+QUEUE_SIZE=$(curl -s http://<JENKINS_MASTER_IP>:8080/queue/api/json | jq '.items | length')
+aws cloudwatch put-metric-data --metric-name JenkinsQueueLength --namespace Jenkins --value $QUEUE_SIZE
+
+
+
+
+
+---
+
+Step 4: Configure Jenkins Master to Accept Dynamic Slaves
+
+1. Configure Nodes in Jenkins:
+
+Go to Manage Jenkins > Manage Nodes and Clouds > New Node.
+
+Create a new node template and set Number of Executors to 2.
+
+Copy the generated Secret Key for use in the User Data script.
+
+
+
+2. Install EC2 Plugin (Optional):
+
+Install the EC2 Plugin from Jenkins plugin manager.
+
+Configure Manage Jenkins > Manage Nodes and Clouds > Configure Clouds > Add a new cloud > Amazon EC2.
+
+Provide AWS credentials and select the region and AMI.
+
+
+
+
+
+---
+
+Step 5: Auto-Scale and Monitor the Setup
+
+1. Monitor Build Queues:
+
+Ensure scaling policies align with the Jenkins queue size.
+
+
+
+2. Auto-Scale Behavior:
+
+If the build queue increases, the ASG launches new slaves.
+
+If builds complete and slaves are idle, the ASG terminates instances.
+
+
+
+3. Health Checks:
+
+Use EC2 health checks to ensure healthy instances.
+
+
+
+
+
+---
+
+Summary
+
+1. Master Node: Runs Jenkins and distributes builds.
+
+
+2. Slave Nodes (Min 2, Max 10): Dynamically scale via Auto Scaling.
+
+
+3. Scaling Trigger: Monitored by Jenkins queue length or build demand.
+
+
+4. Communication: Slaves connect via JNLP with master IP and secret key.
+
+
+
+This setup ensures a flexible and scalable Jenkins environment capable of handling dynamic build workloads.
+
