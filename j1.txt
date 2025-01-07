@@ -1,0 +1,22 @@
+import requests
+
+# Jenkins details
+jenkins_url = "http://your-jenkins-server/job/your-job-name/buildWithParameters"
+username = "your-username"
+password = "your-password"
+
+# Parameters for the build (if any)
+params = {
+    "PARAM1": "value1",
+    "PARAM2": "value2"
+}
+
+# Trigger the build
+response = requests.post(jenkins_url, auth=(username, password), params=params)
+
+# Check the response
+if response.status_code == 201:
+    print("Build triggered successfully!")
+else:
+    print(f"Failed to trigger build. Status code: {response.status_code}")
+    print(response.text)
