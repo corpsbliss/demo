@@ -1,0 +1,7 @@
+arr = ["abcdef", "qwerty", "xyzdefg"]
+keywords = ["def", "xyz"]
+
+if any(any(kw in item for kw in keywords) for item in arr):
+    print("Match found")
+else:
+    print("No match found")
