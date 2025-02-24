@@ -1,0 +1,10 @@
+arr = ["abcdef", "qwerty", "xyzghi"]
+keywords = ["def", "xyz"]
+
+# Check if each keyword is present in at least one separate element
+found_keywords = {kw: any(kw in item for item in arr) for kw in keywords}
+
+if all(found_keywords.values()):  
+    print("Match found")
+else:
+    print("No match found")
